@@ -15,9 +15,11 @@ class TestSpeedRun(TransactionTestCase):
         self.run2 = models.SpeedRun.objects.create(
             name='Test Run 2', run_time='0:15:00', setup_time='0:05:00', order=2)
         self.run3 = models.SpeedRun.objects.create(
-            name='Test Run 3', run_time='0:20:00', setup_time='0:05:00', order=None)
+            name='Test Run 3', run_time='0:05:00', order=3)
         self.run4 = models.SpeedRun.objects.create(
-            name='Test Run 4', run_time='0', setup_time='0', order=3)
+            name='Test Run 4', run_time='0:20:00', setup_time='0:05:00', order=None)
+        self.run5 = models.SpeedRun.objects.create(
+            name='Test Run 5', order=4)
         self.runner1 = models.Runner.objects.create(name='trihex')
 
     def test_first_run_start_time(self):
@@ -25,20 +27,26 @@ class TestSpeedRun(TransactionTestCase):
             datetime.datetime.combine(self.event1.date, datetime.time(11,30))))
 
     def test_second_run_start_time(self):
-        self.assertEqual(self.run2.starttime, datetime.datetime.combine(
-            self.event1.date, datetime.time(12, 50, tzinfo=self.event1.timezone)))
+        self.assertEqual(self.run2.starttime, self.event1.timezone.localize(
+            datetime.datetime.combine(self.event1.date, datetime.time(12, 20))
+        ))
+
+    def test_no_setup_time_run_start_time(self):
+        self.assertEqual(self.run3.starttime, self.event1.timezone.localize(
+            datetime.datetime.combine(self.event1.date, datetime.time(12, 40))
+        ))
 
     def test_null_order_run_start_time(self):
-        self.assertEqual(self.run3.starttime, None)
-
-    def test_null_order_run_end_time(self):
-        self.assertEqual(self.run3.endtime, None)
-
-    def test_no_run_time_run_start_time(self):
         self.assertEqual(self.run4.starttime, None)
 
-    def test_no_run_time_run_end_time(self):
+    def test_null_order_run_end_time(self):
         self.assertEqual(self.run4.endtime, None)
+
+    def test_no_run_time_run_start_time(self):
+        self.assertEqual(self.run5.starttime, None)
+
+    def test_no_run_time_run_end_time(self):
+        self.assertEqual(self.run5.endtime, None)
 
     def test_removing_run_from_schedule(self):
         self.run1.order = None
